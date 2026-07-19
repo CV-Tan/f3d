@@ -99,6 +99,23 @@ public:
     // so we need to set the name right after initialization
     this->Window.setWindowName("f3d");
 
+    // 在 UIObserver->InstallObservers(this->VTKInteractor) 之前或之后挂载
+this->VTKInteractor->AddObserver(
+  vtkCommand::KeyPressEvent,
+  [](vtkObject* caller, unsigned long, void*) -> bool {
+    vtkRenderWindowInteractor* rwi = static_cast<vtkRenderWindowInteractor*>(caller);
+    std::string keySym = rwi->GetKeySym() ? rwi->GetKeySym() : "";
+    if (rwi->GetRepeatCount() > 1 &&
+        (keySym.rfind("Shift",   0) == 0 ||
+         keySym.rfind("Control", 0) == 0 ||
+         keySym.rfind("Alt",     0) == 0))
+    {
+      return true;   // AbortFlag = true，ImGui 和后续观察者都不再收到
+    }
+    return false;
+  },
+  10.f);             // 优先级高于 ImGui 的 2.f
+
     this->UIObserver->InstallObservers(this->VTKInteractor);
 
     // observe UI event to trigger commands
